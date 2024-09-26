@@ -1,44 +1,36 @@
 #### Preamble ####
-# Purpose: Cleans the raw plane data recorded by two observers..... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 6 April 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
-# License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Purpose: Cleans and combines the raw housing and ward data to prepare the data for analysis
+# Author: Tanmay Sachin Shinde
+# Date: 26 September, 2024
+# Contact: tanmay.shinde@mail.utoronto.ca
+# Pre-requisites: Libraries required - tidyverse
 
 #### Workspace setup ####
 library(tidyverse)
 
 #### Clean data ####
-raw_data <- read_csv("inputs/data/plane_data.csv")
+raw_housing_data <- read_csv("data/raw_data/raw_housing_data.csv")
+raw_ward_names_data <- read_csv("data/raw_data/raw_ward_data.csv")
+raw_census_data <- read_csv("data/raw_data/raw_census_data.csv")
 
-cleaned_data <-
-  raw_data |>
-  janitor::clean_names() |>
-  select(wing_width_mm, wing_length_mm, flying_time_sec_first_timer) |>
-  filter(wing_width_mm != "caw") |>
-  mutate(
-    flying_time_sec_first_timer = if_else(flying_time_sec_first_timer == "1,35",
-                                   "1.35",
-                                   flying_time_sec_first_timer)
-  ) |>
-  mutate(wing_width_mm = if_else(wing_width_mm == "490",
-                                 "49",
-                                 wing_width_mm)) |>
-  mutate(wing_width_mm = if_else(wing_width_mm == "6",
-                                 "60",
-                                 wing_width_mm)) |>
-  mutate(
-    wing_width_mm = as.numeric(wing_width_mm),
-    wing_length_mm = as.numeric(wing_length_mm),
-    flying_time_sec_first_timer = as.numeric(flying_time_sec_first_timer)
-  ) |>
-  rename(flying_time = flying_time_sec_first_timer,
-         width = wing_width_mm,
-         length = wing_length_mm
-         ) |> 
-  tidyr::drop_na()
+# Removing columns that are not required and filtering out irrelevant rows
+cleaned_housing_data <- raw_housing_data %>% 
+  rename(`ApprovedARH2020toPresent` = Affordable.Homes.Approved..2020...Present.,
+         `ApprovedARH2017toPresent` = Total.ARH.Approved..2017...Present.) %>% 
+  select(Ward, Status, -X_id, -ApprovedARH2020toPresent, ApprovedARH2017toPresent, 
+         -geometry, -Project.ID, -Addresses, -Anchor.Address, 
+         -Rent.Controlled.Market.Units.Approved, -RGI.Homes.Approved) %>%
+  filter(Ward != 0) %>% arrange(Ward) %>%
+  group_by(Ward, Status) %>% 
+  summarize(ApprovedARH2017toPresent = sum(ApprovedARH2017toPresent))
+
+cleaned_census_data <- raw_census_data %>% slice(-1)
+
+# Check for null values
+#sum(is.na(int_cleaned_data)) == 0
+
 
 #### Save data ####
-write_csv(cleaned_data, "outputs/data/analysis_data.csv")
+write_csv(cleaned_housing_data, "data/analysis_data/housing_analysis_data.csv")
+write_csv(raw_ward_names_data, "data/analysis_data/ward_names.csv")
+write_csv(cleaned_census_data, "data/analysis_data/ward_census_data.csv")
