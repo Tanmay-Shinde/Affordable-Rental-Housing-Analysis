@@ -24,7 +24,21 @@ cleaned_housing_data <- raw_housing_data %>%
   group_by(Ward, Status) %>% 
   summarize(ApprovedARH2017toPresent = sum(ApprovedARH2017toPresent))
 
+# Removing the row where Ward = 0
 cleaned_census_data <- raw_census_data %>% slice(-1)
+
+# Transform housing data file to include ApprovedARH2017toPresent column in census_data
+housing_data_for_census <- cleaned_housing_data %>% select(-Status) %>% 
+  group_by(Ward) %>% 
+  summarize(ApprovedARH2017toPresent = sum(ApprovedARH2017toPresent))
+
+# adding missing ward 23 to match number of rows in both files
+new_row <- data.frame(Ward = 23, ApprovedARH2017toPresent = 0)
+
+housing_data_for_census <- bind_rows(housing_data_for_census, new_row) %>% arrange(Ward)
+
+# add new column to census_data
+cleaned_census_data$ApprovedARH2017toPresent <- housing_data_for_census$ApprovedARH2017toPresent
 
 # Check for null values
 #sum(is.na(int_cleaned_data)) == 0
