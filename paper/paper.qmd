@@ -1,144 +1,209 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
-author: 
-  - First author
-  - Another author
-thanks: "Code and data are available at: LINK."
+title: "Evaluating Toronto's Affordable Rental Housing Program*"
+author: "Tanmay Sachin Shinde"
+thanks: "Code and data are available at: [TorontoAffordableHousing](https://github.com/Tanmay-Shinde/Term-Paper-1)"
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
 format: pdf
 number-sections: true
 bibliography: references.bib
+toc: true
 ---
 
 ```{r}
+#| echo: false
 #| include: false
 #| warning: false
 #| message: false
 
+library(knitr)
+library(opendatatoronto)
 library(tidyverse)
-library(palmerpenguins)
+library(dplyr)
+library(ggplot2)
 ```
 
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
 
-# Introduction
+housing_data <- read_csv("../data/analysis_data/housing_analysis_data.csv")
 
-You can and should cross-reference sections and sub-sections. We use @citeR and @rohan.
+ward_census <- read_csv("../data/analysis_data/ward_census_data.csv")
 
-The remainder of this paper is structured as follows. @sec-data....
+ward_names <- read_csv("../data/analysis_data/ward_names.csv")
+
+```
+
+# Abstract {#abstract}
+
+This paper examines the trend in the number of approved Affordable Rental Housing (ARH) units across different wards in Toronto. We use the Affordable Housing Pipeline data and Ward Census data from the Open Data Toronto portal to look at the correlation between the number of ARH projects approved in a particular ward with its population, unemployment rate, and percentage of low-income residents. 
+
+WHAT WAS FOUND  - NEED TO WRITE
+
+These findings highlight how social and economic characteristics impact access to affordable housing within the city of Toronto and potentially inform policy-making on equitable housing distribution.
+
+
+
+
+# Introduction {#intro}
+
+The city of Toronto is currently the 6th most expensive city in North America and 11th most expensive city in the world in terms of rental housing [@Scibetta]. This means finding rental housing in Toronto is more expensive than in San Francisco, London, and New York. In the last decade, the cost of housing has far outpaced income growth, with house prices growing nearly four times faster and rent growing two times faster [@CANCEA]. According to the Toronto Regional Real Estate Board (TRREB), record population growth has kept the demand for condo rental apartments high in the past decade. The affordability challenges associated with high mortgage payments for ownership housing have also continued to be a driver of rental demand [@TRREB]. Thus, rent for condo units has grown by 25% from 2006 to 2017 and rent for new purpose-built rental units is out-pacing median renter household incomes [@CANCEA].
+
+On top of that, there is a significant shortage of new purpose-built rental housing. Almost all new rental demand is being met through the secondary rental market (e.g. rented condominiums, secondary suites). Almost all of the nearly 48,000 new rental households formed from 2011 to 2016 were accommodated in the secondary market. Purpose built rental developments have accounted for a small fraction (6%) of the development pipeline from 2011 -2016 [@CANCEA]. To combat this, the Housing Secretariat has devised a new Affordable Rental Housing (**ARH**) Program to meet the City Council’s HousingTO Plan targets that include both affordable rental (including Rent-Geared-to-Income) and rent-controlled market units [@2023-EX9-3]. The program is part of a broader plan approved by city council to build 65,000 new rent-controlled homes by 2030. The total includes 6,500 rent-geared-to income, 41,000 affordable rental and 17,500 rent-controlled market homes. These affordable rental homes meet the City's current definition of affordable rental housing, with rent, including utilities, at or below 100 per cent of Average Market Rent (AMR).
+
+This paper aims to provide insights into the effectiveness of the city’s affordable housing initiatives, by looking at the trend in the number of approved ARH units across different wards in Toronto and how the distribution of these affordable rental housing units varies across the wards. Using the Affordable Housing Pipeline data and Ward Census data from the Open Data Toronto portal, we analyze the correlation between the number of ARH projects approved in a ward and its population, unemployment rate, and percentage of low-income residents.
+
+Our findings show that (summary of findings). -- NEED TO COMPLETE
+
+These results are significant as they not only provide insights into the efficacy of the Affordable Rental Housing program, but also help identify which areas of Toronto may require more focused policy interventions. These findings can help policymakers better target future ARH projects to ensure equitable distribution and improve housing affordability across the city. The remainder of this paper is structured as follows. [Section 3](#sec-data) discusses the dataset and the cleaning process used to prepare the data for analysis. [Section 4](#results) presents the analysis results through various graphs and visualizations that highlight the trends in the data. [Section 5](#discussion) provides a summary of the results and discusses the findings and conclusion of the study, as well as the limitations of the data.
+
 
 
 
 # Data {#sec-data}
 
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
+## Source
 
-```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
-#| echo: false
+The data has been obtained from Open Data Toronto - an open-source portal provided by the city of Toronto [@OpenData]. There are two main datasets used in this study:
 
-ggplot(penguins, aes(x = island, fill = species)) +
-  geom_bar(alpha = 0.8) +
-  scale_fill_manual(values = c("darkorange","purple","cyan4"),
-                    guide = "none") +
-  theme_minimal() +
-  facet_wrap(~species, ncol = 1) +
-  coord_flip()
-```
+1. **Affordable Housing Pipeline** published by the Housing Secretariat - This dataset contains data on upcoming affordable rental homes that are in development and have received an approval from City Council either as initial approval for financial incentives through a City housing program, since January 1, 2017.
 
-Talk more about it.
+2. **Ward Profiles (25-Ward Model)** published by the Department of City Planning - This workbook contains two datasets that we use in this study - the  **2021 Census Profiles** and the **2021 Ward Profiles** based on the 25-Ward model. The census contains information on Ward-wise population, occupied private dwellings, households, migration, labor force, employment, as well as income rates. From these we will only be needing the population, unemployment rates, and low-income population rate for each wards for our analysis. The second dataset just maps ward numbers to their respective names.
 
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
+All datasets have been published under the [Open Government License - Toronto](https://open.toronto.ca/open-data-license/) and are available on the Toronto [Open Data](https://open.toronto.ca/) portal. All instructions and code required to obtain the data can be found on the 
 
-```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
-#| echo: false
-#| warning: false
-#| message: false
+## Data Processing and Cleaning {#cleaning}
 
-analysis_data <- read_csv(here::here("data/analysis_data/analysis_data.csv"))
+The data was cleaned and analysed in R[@citeR] using various helpful packages like, tidyverse[@tidyverse], dplyr[@rDplyr]. The raw_housing_data and raw_census data contained a lot of data that was irrelevant to this study. Both datasets were carefully cleaned and transformed to get the relevant datasets for analysis. From the housing_data, we only take the columns containing the ward numbers, status of project which could be one of the five categorical values - Pre-Planning (project has been approved for financial incentives, but does not yet have its first planning approval), Under Review (project is under review by City Planning and has its first planning approval), Final Planning Approval (project has received it’s final planning approval), Under Construction (project is under construction), Occupied (project has begun to occupy units), and the column with the number of units in each status for every ward in the city. The raw_census_data file was also thoroughly processed to reduce it to only the relevant features required for this study - ward-wise population, unemployment rates, and proportion of low-income residents. A new column is then added to the census_data which is the total number of ARH units approved for that ward, which is just the sum of the units in each category for a single ward from the housing_data.
 
-analysis_data |> 
-  ggplot(aes(x = width, y = length)) +
-  geom_point(alpha = 0.8) +
-  theme_minimal() +
-  labs(x = "Wing width (mm)",
-       y = "Wing length (mm)")
-```
+## Variables and Measurement
 
-Talk way more about it. 
+1. housing_analysis_data: This file contains three variables of interest - Ward (ward numbers for different wards in Toronto), Status (categorical variable with values as mentioned in the [Data Processing and Cleaning](#cleaning) subsection), and ApprovedARH2017toPresent (the number of approved ARH units from 2017 to present). The analysis we want to conduct on this data is fairly simple, we examine the ward-wise distribution of ARH units, while incorporating the proportion of statuses some of the units might be in for each ward.
+
+2. ward_census_data: This file contains 5 variables - Ward (ward numbers for different wards in Toronto), TotalPopulation (the total population for each of the wards), UnemploymentRate (the unemployment rate for each ward), LowIncomePercentage (the proportion of low-income residents for each ward) where the cut-offs for low-income status are defined on the Statistics Canada [website](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1110024101). We will use this dataset to visualize correlation between the demographics of a certain ward and the number of approved ARH projects.
+
+3. ward_names: This file maps the ward numbers to their official names.
+
+-- TALK ABOUT SIMILAR DATASETS
 
 
 
-# Model
 
-The goal of our modelling strategy is twofold. Firstly,...
+# Results {#results}
 
-Here we briefly describe the Bayesian analysis model used to investigate... Background details and diagnostics are included in [Appendix -@sec-model-details].
-
-## Model set-up
-
-Define $y_i$ as the number of seconds that the plane remained aloft. Then $\beta_i$ is the wing width and $\gamma_i$ is the wing length, both measured in millimeters.  
-
-\begin{align} 
-y_i|\mu_i, \sigma &\sim \mbox{Normal}(\mu_i, \sigma) \\
-\mu_i &= \alpha + \beta_i + \gamma_i\\
-\alpha &\sim \mbox{Normal}(0, 2.5) \\
-\beta &\sim \mbox{Normal}(0, 2.5) \\
-\gamma &\sim \mbox{Normal}(0, 2.5) \\
-\sigma &\sim \mbox{Exponential}(1)
-\end{align}
-
-We run the model in R [@citeR] using the `rstanarm` package of @rstanarm. We use the default priors from `rstanarm`.
-
-
-### Model justification
-
-We expect a positive relationship between the size of the wings and time spent aloft. In particular...
-
-We can use maths by including latex between dollar signs, for instance $\theta$.
-
-
-# Results
-
-Our results are summarized in @tbl-modelresults.
+## Ward-wise Distribution of ARH Units
 
 ```{r}
 #| echo: false
 #| eval: true
 #| warning: false
 #| message: false
+#| label: fig-arh-units-by-ward
+#| fig-cap: "Examining the ward-wise distribution of approved affordable rental housing units"
 
-library(rstanarm)
+# Plotting the number of ARH units in each ward
+ggplot(housing_data, aes(x = Ward, y = ApprovedARH2017toPresent, fill = Status)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Approved Affordble Rental Housing Units per Ward", x = "Ward", y = "Number of ARH Units") +
+  theme_minimal()
+```
+@fig-arh-units-by-ward shows the number of ARH units approved by the City Council for each ward. It shows that there are 8 wards out of 25 where more than 1000 units have been approved and 9 wards where less than 500 units have been approved. One thing the visualization reveals is that a high proportion of the units are still in the pre-construction phase and are still being reviewed. 
 
-first_model <-
-  readRDS(file = here::here("models/first_model.rds"))
+## Summary Statistics
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-status-prop
+#| fig-cap: "Examining the proportion of each status for ARH units across all wards"
+
+
+ggplot(housing_data, aes(x = "", y = ApprovedARH2017toPresent, fill = Status)) +
+  geom_bar(stat = "identity", width = 1) +   
+  coord_polar(theta = "y") +
+  labs(title = "Proportion of the Status of ARH Units across all Wards", x = NULL, y = NULL) +
+  theme_void() +                             
+  theme(legend.position = "right")          
+
+```
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: table-percent
+#| fig-cap: "Table of percentage of ARH units in each status across all wards"
+
+status_grps <- housing_data %>% select(-Ward) %>% group_by(Status) %>%
+  summarize(ApprovedARH2017toPresent = sum(ApprovedARH2017toPresent)) %>%
+  mutate(Percentage = ApprovedARH2017toPresent / sum(ApprovedARH2017toPresent) * 100)
+
+
+status_grps$Percentage <- round(status_grps$Percentage, digits = 2)
+status_grps
+
+```
+
+Thus, from @fig-status-prop and @table-percent, we can see that around 55% of the units approved by the City Council are still under review, which means that the project has its first planning approval but is under review by City Planning. We can also see that about 26% of the units are either under construction or have been occupied. Overall, we can see that 73% of the units approved for this program are in the pre-construction phase, 16% are currently under construction, 10% have been occupied, and about 2% have been cancelled.
+
+## Correlational Analysis
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-sp-popvunits
+#| fig-cap: "Examining the relationship between Ward Population and the Number of ARH Units Approved"
+
+ggplot(ward_census, aes(x = ward_census$`Total Population`, y = ward_census$ApprovedARH2017toPresent)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatter Plot of Total Population vs. Approved ARH Units", x = "Total Ward Population", y = "Approved ARH Units")
+
 ```
 
 ```{r}
 #| echo: false
 #| eval: true
-#| label: tbl-modelresults
-#| tbl-cap: "Explanatory models of flight time based on wing width and wing length"
 #| warning: false
+#| message: false
+#| label: fig-sp-unempvunits
+#| fig-cap: "Examining the relationship between Unemployment Rates and the Number of ARH Units Approved"
 
-modelsummary::modelsummary(
-  list(
-    "First model" = first_model
-  ),
-  statistic = "mad",
-  fmt = 2
-)
+ward_census$`Unemployment rate` <- as.numeric(gsub("%", "", ward_census$`Unemployment rate`))
+
+ggplot(ward_census, aes(x = ward_census$`Unemployment rate`, y = ward_census$ApprovedARH2017toPresent)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatter Plot of Unemployment Rates vs. Approved ARH Units", x = "Unemployment Rates", y = "Approved ARH Units")
+
 ```
 
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-sp-lincvunits
+#| fig-cap: "Examining the relationship between Proportion of low-income residents and the Number of ARH Units Approved"
+
+ward_census$`Low income Percentage` <- as.numeric(gsub("%", "", ward_census$`Low income Percentage`))
+
+ggplot(ward_census, aes(x = ward_census$`Low income Percentage`, y = ward_census$ApprovedARH2017toPresent)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatter Plot of Percentage of Low Income Residents vs. Approved ARH Units", x = "Unemployment Rates", y = "Approved ARH Units")
+
+```
+While the points in the scatter plots of @fig-sp-popvunits and @fig-sp-lincvunits seem to be clustered and randomly scattered, we can see a fair positive trend in the data when modeled using linear regression. Thus, we can say that in general there is a positive relationship between ward population and unemployment rates with the number of approved affordable rental housing units. On the other hand, @fig-sp-unempvunits, shows no distinct pattern in the data and it can be argued that unemployment rates in a ward are virtually uncorrelated with the number of approved ARH units.
 
 
-
-# Discussion
+# Discussion {#discussion}
 
 ## First discussion point {#sec-first-point}
 
@@ -155,61 +220,6 @@ Weaknesses and next steps should also be included.
 \newpage
 
 \appendix
-
-# Appendix {-}
-
-
-# Additional data details
-
-# Model details {#sec-model-details}
-
-## Posterior predictive check
-
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
-
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
-
-```{r}
-#| eval: true
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
-
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
-
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
-```
-
-## Diagnostics
-
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
-
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
-
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
-
-plot(first_model, "trace")
-
-plot(first_model, "rhat")
-```
 
 
 
