@@ -12,6 +12,7 @@ library(tidyverse)
 raw_housing_data <- read_csv("data/raw_data/raw_housing_data.csv")
 raw_ward_names_data <- read_csv("data/raw_data/raw_ward_data.csv")
 raw_census_data <- read_csv("data/raw_data/raw_census_data.csv")
+raw_ward_area_data <- read_csv("data/raw_data/raw_ward_areas.csv")
 
 # Removing columns that are not required and filtering out irrelevant rows
 cleaned_housing_data <- raw_housing_data %>% 
@@ -40,6 +41,10 @@ housing_data_for_census <- bind_rows(housing_data_for_census, new_row) %>% arran
 # add new column to census_data
 cleaned_census_data$ApprovedARH2017toPresent <- housing_data_for_census$ApprovedARH2017toPresent
 
+cleaned_ward_areas <- raw_ward_area_data %>%
+  select(Ward, `Area (sq km)`) %>%
+  slice(1:25)
+
 # Check for null values
 #sum(is.na(int_cleaned_data)) == 0
 
@@ -48,3 +53,4 @@ cleaned_census_data$ApprovedARH2017toPresent <- housing_data_for_census$Approved
 write_csv(cleaned_housing_data, "data/analysis_data/housing_analysis_data.csv")
 write_csv(raw_ward_names_data, "data/analysis_data/ward_names.csv")
 write_csv(cleaned_census_data, "data/analysis_data/ward_census_data.csv")
+write_csv(cleaned_ward_areas, "data/analysis_data/ward_area_data.csv")

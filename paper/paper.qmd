@@ -1,9 +1,8 @@
 ---
-title: "Evaluating Toronto's Affordable Rental Housing Program*"
+title: "Evaluating Toronto's Affordable Rental Housing Program"
 author: "Tanmay Sachin Shinde"
 thanks: "Code and data are available at: [TorontoAffordableHousing](https://github.com/Tanmay-Shinde/Term-Paper-1)"
-date: today
-date-format: long
+date: "September 27, 2024"
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -21,6 +20,10 @@ library(opendatatoronto)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(knitr)
+# install.packages("leaflet")
+library(leaflet)
+library(sf)
 ```
 
 ```{r}
@@ -34,33 +37,23 @@ ward_census <- read_csv("../data/analysis_data/ward_census_data.csv")
 
 ward_names <- read_csv("../data/analysis_data/ward_names.csv")
 
+ward_areas <- read_csv("../data/analysis_data/ward_area_data.csv")
+
 ```
 
 # Abstract {#abstract}
 
-This paper examines the trend in the number of approved Affordable Rental Housing (ARH) units across different wards in Toronto. We use the Affordable Housing Pipeline data and Ward Census data from the Open Data Toronto portal to look at the correlation between the number of ARH projects approved in a particular ward with its population, unemployment rate, and percentage of low-income residents. 
-
-WHAT WAS FOUND  - NEED TO WRITE
-
-These findings highlight how social and economic characteristics impact access to affordable housing within the city of Toronto and potentially inform policy-making on equitable housing distribution.
-
-
-
+This paper examines the trend in the number of approved Affordable Rental Housing (ARH) units across different wards in Toronto. We use the Affordable Housing Pipeline data and Ward Census data from the Open Data Toronto portal to look understand the relationship between the number of ARH projects approved in a particular ward with its population, unemployment rate, and percentage of low-income residents. It was found that factors such as percentage of low-income residents living in the ward and the population density, rather than total population, has a stronger influence on where ARH units are allocated. Further, main city centers tend to be prioritized for the allocation of ARH units, likely due to higher demand and urban density pressures. These findings highlight how social and economic characteristics impact access to affordable housing within the city of Toronto and potentially inform policy-making on equitable housing distribution.
 
 # Introduction {#intro}
 
 The city of Toronto is currently the 6th most expensive city in North America and 11th most expensive city in the world in terms of rental housing [@Scibetta]. This means finding rental housing in Toronto is more expensive than in San Francisco, London, and New York. In the last decade, the cost of housing has far outpaced income growth, with house prices growing nearly four times faster and rent growing two times faster [@CANCEA]. According to the Toronto Regional Real Estate Board (TRREB), record population growth has kept the demand for condo rental apartments high in the past decade. The affordability challenges associated with high mortgage payments for ownership housing have also continued to be a driver of rental demand [@TRREB]. Thus, rent for condo units has grown by 25% from 2006 to 2017 and rent for new purpose-built rental units is out-pacing median renter household incomes [@CANCEA].
 
-On top of that, there is a significant shortage of new purpose-built rental housing. Almost all new rental demand is being met through the secondary rental market (e.g. rented condominiums, secondary suites). Almost all of the nearly 48,000 new rental households formed from 2011 to 2016 were accommodated in the secondary market. Purpose built rental developments have accounted for a small fraction (6%) of the development pipeline from 2011 -2016 [@CANCEA]. To combat this, the Housing Secretariat has devised a new Affordable Rental Housing (**ARH**) Program to meet the City Council’s HousingTO Plan targets that include both affordable rental (including Rent-Geared-to-Income) and rent-controlled market units [@2023-EX9-3]. The program is part of a broader plan approved by city council to build 65,000 new rent-controlled homes by 2030. The total includes 6,500 rent-geared-to income, 41,000 affordable rental and 17,500 rent-controlled market homes. These affordable rental homes meet the City's current definition of affordable rental housing, with rent, including utilities, at or below 100 per cent of Average Market Rent (AMR).
+On top of that, there is a significant shortage of new purpose-built rental housing. Almost all new rental demand is being met through the secondary rental market (e.g. rented condominiums, secondary suites). Almost all of the nearly 48,000 new rental households formed from 2011 to 2016 were accommodated in the secondary market. Purpose built rental developments have accounted for a small fraction (6%) of the development pipeline from 2011 to 2016 [@CANCEA]. To combat this, the Housing Secretariat has devised a new Affordable Rental Housing (ARH) Program to meet the City Council’s HousingTO Plan targets that include both affordable rental (including Rent-Geared-to-Income) and rent-controlled market units [@2023-EX9-3]. The program is part of a broader plan approved by city council to build 65,000 new rent-controlled homes by 2030. The total includes 6,500 rent-geared-to income, 41,000 affordable rental and 17,500 rent-controlled market homes. These affordable rental homes meet the City's current definition of affordable rental housing, with rent, including utilities, at or below 100 per cent of Average Market Rent (AMR).
 
-This paper aims to provide insights into the effectiveness of the city’s affordable housing initiatives, by looking at the trend in the number of approved ARH units across different wards in Toronto and how the distribution of these affordable rental housing units varies across the wards. Using the Affordable Housing Pipeline data and Ward Census data from the Open Data Toronto portal, we analyze the correlation between the number of ARH projects approved in a ward and its population, unemployment rate, and percentage of low-income residents.
-
-Our findings show that (summary of findings). -- NEED TO COMPLETE
+This paper aims to provide insights into the effectiveness of the city’s affordable housing initiatives, by looking at the trend in the number of approved ARH units across different wards in Toronto and how the distribution of these affordable rental housing units varies across the wards. Using the Affordable Housing Pipeline data and Ward Census data from the Open Data Toronto portal, we analyze the correlation between the number of ARH projects approved in a ward and its population, unemployment rate, and percentage of low-income residents. The findings show that factors such as percentage of low-income residents living in the ward and the population density, rather than total population, has a stronger influence on where ARH units are allocated. Further, main city centers tend to be prioritized for the allocation of ARH units, likely due to higher demand and urban density pressures.
 
 These results are significant as they not only provide insights into the efficacy of the Affordable Rental Housing program, but also help identify which areas of Toronto may require more focused policy interventions. These findings can help policymakers better target future ARH projects to ensure equitable distribution and improve housing affordability across the city. The remainder of this paper is structured as follows. [Section 3](#sec-data) discusses the dataset and the cleaning process used to prepare the data for analysis. [Section 4](#results) presents the analysis results through various graphs and visualizations that highlight the trends in the data. [Section 5](#discussion) provides a summary of the results and discusses the findings and conclusion of the study, as well as the limitations of the data.
-
-
-
 
 # Data {#sec-data}
 
@@ -72,11 +65,11 @@ The data has been obtained from Open Data Toronto - an open-source portal provid
 
 2. **Ward Profiles (25-Ward Model)** published by the Department of City Planning - This workbook contains two datasets that we use in this study - the  **2021 Census Profiles** and the **2021 Ward Profiles** based on the 25-Ward model. The census contains information on Ward-wise population, occupied private dwellings, households, migration, labor force, employment, as well as income rates. From these we will only be needing the population, unemployment rates, and low-income population rate for each wards for our analysis. The second dataset just maps ward numbers to their respective names.
 
-All datasets have been published under the [Open Government License - Toronto](https://open.toronto.ca/open-data-license/) and are available on the Toronto [Open Data](https://open.toronto.ca/) portal. All instructions and code required to obtain the data can be found on the 
+All datasets have been published under the [Open Government License - Toronto](https://open.toronto.ca/open-data-license/) and are available on the Toronto [Open Data](https://open.toronto.ca/) portal. All instructions and code required to obtain the data can be found at: [scripts/01-download_data.R](https://github.com/Tanmay-Shinde/Toronto-Affordable-Rental-Housing-Analysis/blob/main/scripts/01-download_data.R)
 
 ## Data Processing and Cleaning {#cleaning}
 
-The data was cleaned and analysed in R[@citeR] using various helpful packages like, tidyverse[@tidyverse], dplyr[@rDplyr]. The raw_housing_data and raw_census data contained a lot of data that was irrelevant to this study. Both datasets were carefully cleaned and transformed to get the relevant datasets for analysis. From the housing_data, we only take the columns containing the ward numbers, status of project which could be one of the five categorical values - Pre-Planning (project has been approved for financial incentives, but does not yet have its first planning approval), Under Review (project is under review by City Planning and has its first planning approval), Final Planning Approval (project has received it’s final planning approval), Under Construction (project is under construction), Occupied (project has begun to occupy units), and the column with the number of units in each status for every ward in the city. The raw_census_data file was also thoroughly processed to reduce it to only the relevant features required for this study - ward-wise population, unemployment rates, and proportion of low-income residents. A new column is then added to the census_data which is the total number of ARH units approved for that ward, which is just the sum of the units in each category for a single ward from the housing_data.
+The data was cleaned and analysed in R[@citeR] using various helpful packages like, tidyverse[@tidyverse], dplyr[@rDplyr]. The raw_housing_data and raw_census data contained a lot of data that was irrelevant to this study. Both datasets were carefully cleaned and transformed to get the relevant data frames for analysis. From the housing_data, we only take the columns containing the ward numbers, status of project which could be one of the five categorical values - Pre-Planning (project has been approved for financial incentives, but does not yet have its first planning approval), Under Review (project is under review by City Planning and has its first planning approval), Final Planning Approval (project has received it’s final planning approval), Under Construction (project is under construction), Occupied (project has begun to occupy units), and the column with the number of units in each status for every ward in the city. The raw_census_data file was also thoroughly processed to reduce it to only the relevant features required for this study - ward-wise population, unemployment rates, and proportion of low-income residents. A new column is then added to the census_data which is the total number of ARH units approved for that ward, which is just the sum of the units in each category for a single ward from the housing_data.
 
 ## Variables and Measurement
 
@@ -86,14 +79,11 @@ The data was cleaned and analysed in R[@citeR] using various helpful packages li
 
 3. ward_names: This file maps the ward numbers to their official names.
 
--- TALK ABOUT SIMILAR DATASETS
-
-
-
+After reviewing the available datasets on OpenData Toronto, similar datasets related to housing affordability and demographics were considered but not used due to several limitations. Some were outdated or incomplete, and many focused on broader housing trends rather than specific Affordable Rental Housing (ARH) projects. The chosen Affordable Housing Pipeline and Ward Census datasets were the most reliable and relevant, providing the detailed, up-to-date information needed to accurately analyze ARH unit allocations in Toronto.
 
 # Results {#results}
 
-## Ward-wise Distribution of ARH Units
+## Summary Statistics
 
 ```{r}
 #| echo: false
@@ -109,9 +99,6 @@ ggplot(housing_data, aes(x = Ward, y = ApprovedARH2017toPresent, fill = Status))
   labs(title = "Approved Affordble Rental Housing Units per Ward", x = "Ward", y = "Number of ARH Units") +
   theme_minimal()
 ```
-@fig-arh-units-by-ward shows the number of ARH units approved by the City Council for each ward. It shows that there are 8 wards out of 25 where more than 1000 units have been approved and 9 wards where less than 500 units have been approved. One thing the visualization reveals is that a high proportion of the units are still in the pre-construction phase and are still being reviewed. 
-
-## Summary Statistics
 
 ```{r}
 #| echo: false
@@ -119,13 +106,13 @@ ggplot(housing_data, aes(x = Ward, y = ApprovedARH2017toPresent, fill = Status))
 #| warning: false
 #| message: false
 #| label: fig-status-prop
-#| fig-cap: "Examining the proportion of each status for ARH units across all wards"
+#| fig-cap: "Examining the status of ARH units across all wards"
 
 
 ggplot(housing_data, aes(x = "", y = ApprovedARH2017toPresent, fill = Status)) +
   geom_bar(stat = "identity", width = 1) +   
   coord_polar(theta = "y") +
-  labs(title = "Proportion of the Status of ARH Units across all Wards", x = NULL, y = NULL) +
+  labs(title = "Status of ARH Units across all Wards", x = NULL, y = NULL) +
   theme_void() +                             
   theme(legend.position = "right")          
 
@@ -135,7 +122,7 @@ ggplot(housing_data, aes(x = "", y = ApprovedARH2017toPresent, fill = Status)) +
 #| eval: true
 #| warning: false
 #| message: false
-#| label: table-percent
+#| label: fig-table-percent
 #| fig-cap: "Table of percentage of ARH units in each status across all wards"
 
 status_grps <- housing_data %>% select(-Ward) %>% group_by(Status) %>%
@@ -144,11 +131,13 @@ status_grps <- housing_data %>% select(-Ward) %>% group_by(Status) %>%
 
 
 status_grps$Percentage <- round(status_grps$Percentage, digits = 2)
-status_grps
+kable(status_grps, )
 
 ```
 
-Thus, from @fig-status-prop and @table-percent, we can see that around 55% of the units approved by the City Council are still under review, which means that the project has its first planning approval but is under review by City Planning. We can also see that about 26% of the units are either under construction or have been occupied. Overall, we can see that 73% of the units approved for this program are in the pre-construction phase, 16% are currently under construction, 10% have been occupied, and about 2% have been cancelled.
+Thus, from @fig-status-prop and @fig-table-percent, we can see that around 55% of the units approved by the City Council are still under review, which means that the project has its first planning approval but is under review by City Planning. We can also see that about 26% of the units are either under construction or have been occupied. Overall, we can see that 73% of the units approved for this program are in the pre-construction phase, 16% are currently under construction, 10% have been occupied, and about 2% have been cancelled.
+
+@fig-arh-units-by-ward also reveals that while a significant amount of units have been approved for several wards, there are still a high proportion of the units that are still in the pre-construction phase and are still being reviewed. However, there are certain wards, specifically Ward 10, 11, 13, and 25 where a good proportion of the units are either under construction or have already been occupied. This prompts further examination into why certain wards are progressing faster in terms of ARH development and what factors may be influencing the acceleration of housing projects in these areas.
 
 ## Correlational Analysis
 
@@ -200,28 +189,272 @@ ggplot(ward_census, aes(x = ward_census$`Low income Percentage`, y = ward_census
   labs(title = "Scatter Plot of Percentage of Low Income Residents vs. Approved ARH Units", x = "Unemployment Rates", y = "Approved ARH Units")
 
 ```
-While the points in the scatter plots of @fig-sp-popvunits and @fig-sp-lincvunits seem to be clustered and randomly scattered, we can see a fair positive trend in the data when modeled using linear regression. Thus, we can say that in general there is a positive relationship between ward population and unemployment rates with the number of approved affordable rental housing units. On the other hand, @fig-sp-unempvunits, shows no distinct pattern in the data and it can be argued that unemployment rates in a ward are virtually uncorrelated with the number of approved ARH units.
+From @fig-sp-popvunits and @fig-sp-lincvunits, we can see a fair positive trend in the data when modeled using linear regression. Thus, we can say that in general there is a positive relationship between ward population and unemployment rates with the number of approved affordable rental housing units. On the other hand, @fig-sp-unempvunits, shows no distinct pattern in the data and it can be argued that unemployment rates in a ward are virtually uncorrelated with the number of approved ARH units.
 
+## Which Wards have seen the Most Progress?
+
+From our preliminary analysis, we see that the number of Affordable Rental Housing units approved and developed in and around the city of Toronto might be positively related to the total population of the ward and to some extent, to the percentage of low-income residents living in the wards. However, more that 70% of the units we considered are still in the pre-construction phase. We want to understand how policy decisions are made regarding the Affordable Rental Housing Program and which wards, if any, are given preference in the development of ARH units. We would also like to examine the features of these ward and see how they influence policy decisions. Thus, we will now look at a graph showing the ward-wise distribution of only those ARH units which are either 'Under construction' or 'Occupied'.
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-barnew
+#| fig-cap: "Examining the ward-wise distribution of approved affordable rental housing units that are either 'Under Construction' or 'Occupied'"
+
+housing_data_filtered <- housing_data %>%
+  filter((Status %in% c("Under Construction", "Occupied")))
+
+# Plotting the number of ARH units in each ward
+ggplot(housing_data_filtered, aes(x = Ward, y = ApprovedARH2017toPresent, fill = Status)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Approved Affordble Rental Housing Units per Ward", x = "Ward", y = "Number of ARH Units") +
+  theme_minimal()
+
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+
+
+# construct a new dataframe to add to ward_census
+occupied_data <- housing_data_filtered %>% 
+  filter(Status == "Occupied") %>% 
+  select(-Status)
+
+ward_nums_missing <- setdiff(ward_names$`Ward Number`, occupied_data$Ward)
+
+new_rows <- data.frame(Ward = ward_nums_missing, ApprovedARH2017toPresent = 0)
+
+occupied_data <- occupied_data %>% rbind(new_rows) %>% arrange(Ward)
+
+# Similarly construct same for under construction data
+under_const_data <- housing_data_filtered %>% 
+  filter(Status == "Under Construction") %>% 
+  select(-Status)
+
+const_ward_nums_missing <- setdiff(ward_names$`Ward Number`, under_const_data$Ward)
+
+new_rows_const <- data.frame(Ward = const_ward_nums_missing, ApprovedARH2017toPresent = 0)
+
+under_const_data <- under_const_data %>% rbind(new_rows_const) %>% arrange(Ward)
+
+#manipulating ward_census to include 'Under Construction' and 'Occupied'
+new_ward_census <- ward_census %>% 
+  mutate(WardName = ward_names$`Ward Name`,
+           UnderConstruction = under_const_data$ApprovedARH2017toPresent, Occupied =
+           occupied_data$ApprovedARH2017toPresent) %>%
+  mutate(Total = UnderConstruction + Occupied, WardArea = ward_areas$`Area (sq km)`) %>%
+  arrange(desc(Total)) %>%
+  select(Ward, WardName, `Total Population`, WardArea, ApprovedARH2017toPresent, UnderConstruction,
+         Occupied, Total, -`Unemployment rate`, -`Low income Percentage`)
+
+new_ward_census$PopDensity <- new_ward_census$`Total Population` / new_ward_census$WardArea
+
+analysis_data <- new_ward_census %>% filter(Total != 0)
+
+Group1 <- new_ward_census %>% slice(1:10)
+
+Group2 <- new_ward_census %>% slice(11:25)
+
+```
+
+### Comparative Analysis
+
+We want to understand why some wards have seen much more progress in terms of construction of as well as occupation of ARH units compared to others. To do this, we calculate the total number of units that are 'Under Construction' or 'Occupied' for all wards, arrange the wards in descending order using this total number we obtained (ward with highest units first). Then, we split the dataset into two, one containing the top 10 wards and the second one containing the bottom 15 wards. Now, we compare the two groups two find out why policy-makers have given more preference to the top 10 wards.
+
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-arh
+#| fig-cap: "Comparing the average ARH units approved for Top 10 Wards vs. Bottom 15 Wards"
+
+# preparing data to construct boxplot
+df1 <- Group1$ApprovedARH2017toPresent
+df2 <- Group2$ApprovedARH2017toPresent
+
+
+boxplot(df1, df2,
+main = "Boxplot comparing the average ARH units approved across the two groups",
+at = c(2,1),
+names = c("Top 10", "Bottom 15"),
+las = 2,
+col = c("lightblue","lightgreen"),
+border = "black",
+horizontal = TRUE,
+notch = FALSE
+)
+
+```
+From @fig-arh, we can see that the average total number of affordable rental housing units approved is much greater for the Top 10 group than it is for the Bottom 15 group. We can also see that most values in the Bottom 15 group fall within the range of 0 to 1000 while the values for the Top 10 group range from 500 to 3500.
+
+However, what we truly want to understand is why it might be the case that more ARH units are approved for the wards in Group 1 compared to those in Group 2. One explanation could be population - there is a good chance that the wards in Group 1 have higher populations and thus need better infrastructure and more ARH units to support higher demands. Thus, we compare the average population across wards in the two groups using boxplots.
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-pop-bxplt
+#| fig-cap: "Comparing the average total ward population for the Top 10 Wards vs. Bottom 15 Wards"
+
+# preparing data to construct boxplot
+df1 <- Group1$`Total Population`
+df2 <- Group2$`Total Population`
+
+
+boxplot(df1, df2,
+main = "Boxplot comparing the average total population across the two groups",
+at = c(2,1),
+names = c("Top 10", "Bottom 15"),
+las = 2,
+col = c("lightblue","lightgreen"),
+border = "black",
+horizontal = TRUE,
+notch = FALSE
+)
+
+```
+@fig-pop-bxplt, illustrates that the average populations of both wards are roughly the same. Contrary to what might be expected, the average total population for the bottom 15 wards (those with fewer ARH projects) is actually slightly higher than that of the top wards. This finding suggests that population size alone is not a significant factor in determining which wards receive priority for construction of ARH units. 
+
+Another factor that might influence policy and construction-related decisions could be the population density of the ward. Observing the average population density of the two groups (@fig-means), we can see that wards in Group 1 overall have a higher average population density compared to those in Group 2. This is enough motivation for us to examine the relationship between the average population density of the wards and the number of ARH units constructed. Figure @fig-pop-density shows that the wards with higher population density tend to have more Affordable Rental Housing (ARH) units constructed. This observation suggests that population density could indeed be a significant factor in influencing the allocation of ARH projects. Denser wards, with potentially greater demand for housing, might receive more attention in terms of affordable housing development to address housing shortages more effectively. Higher-density areas could be prioritized due to a greater concentration of low-income households or limited availability of land for development.
+
+``` {r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-means
+
+grp1_mean_popdensity <- mean(Group1$`Total Population` / Group1$WardArea)
+grp2_mean_popdensity <- mean(Group2$`Total Population` / Group2$WardArea)
+
+pop_density_means <- data.frame(
+  Group = c("Top 10 Wards", "Bottom 15 Wards"),
+  Average_Population_Density = c(grp1_mean_popdensity, grp2_mean_popdensity)
+)
+
+kable(pop_density_means, col.names = c("Group", "Average Population Density"))
+
+```
+
+
+
+``` {r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| label: fig-pop-density
+#| fig-cap: "Examining the relationship between population density and Total ARH units under construction or occupied across wards"
+
+ggplot(analysis_data, aes(x = analysis_data$PopDensity, y = analysis_data$Total)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatter Plot of Population Density vs. Approved ARH Units", x = "Ward Population Density", y = "Approved ARH Units")
+
+
+```
+
+To make sense of the data trends and results, we can also look at where the wards in the two groups are placed, geographically.
+
+```{r}
+#| echo: false
+#| include: false
+#| warning: false
+#| message: false
+#| label: fig-map
+#| fig-cap: "Map of the wards belonging to the two groups"
+
+
+Group1$Group <- "Group1"
+Group2$Group <- "Group2"
+
+map_grps <- rbind(Group1, Group2)
+
+map_grps <- map_grps %>% select(Ward, Group) %>% rename(AREA_LONG_CODE = Ward)
+
+ward_map <- st_read("../data/analysis_data/wards.geojson")
+ward_map$AREA_LONG_CODE <- as.integer(ward_map$AREA_LONG_CODE)
+
+ward_map <- ward_map %>%
+  left_join(map_grps, by = "AREA_LONG_CODE")
+
+group_colors <- colorFactor(c("lightblue", "lightgreen"), ward_map$Group)
+
+leaflet_map <- leaflet(ward_map) %>%
+  addTiles() %>%  # Adds the base map tiles
+  addPolygons(
+    fillColor = ~group_colors(Group), 
+    fillOpacity = 0.7,                 
+    color = "black",                   
+    weight = 1                         
+  ) %>%
+  addLegend(
+    pal = group_colors, 
+    values = ward_map$Group, 
+    title = "Groups", 
+    opacity = 1
+  )
+
+```
+
+```{r}
+#| echo: false
+#| warning: false  
+#| message: false
+
+#install.packages("webshot2")
+#install.packages("htmlwidgets")
+# library(webshot2)
+# library(htmlwidgets)
+# 
+# saveWidget(leaflet_map, "toronto_ward_grp_distribution.html", selfcontained = TRUE)
+# 
+# webshot("toronto_ward_grp_distribution.html", file = "toronto_ward_grp_distribution.png", vwidth = 1200, vheight = 800)
+
+```
+
+![Toronto Ward Distribution based on Number of ARH Units Under Construction or Occupied](toronto_ward_grp_distribution.png)
+```{r}
+#| echo: false
+#| warning: false  
+#| message: false
+
+grp1_ward_names <- Group1 %>% select(WardName)
+
+kable(grp1_ward_names, col.names = c("Ward Names that have the highest rates of construction and Occupied ARH units:"))
+
+```
+
+We can see from the data and the map that the wards that have the highest rates of construction and occupied ARH units are primarily the wards located in and around main city centers of Toronto, reflecting areas that are likely to have higher population density and greater demand for housing. 
 
 # Discussion {#discussion}
 
-## First discussion point {#sec-first-point}
+## Summary
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+This paper analyzed the allocation of Affordable Rental Housing (ARH) units across different wards in Toronto, focusing on factors such as population size, population density, unemployment rates, and the percentage of low-income residents. Using data from the Affordable Housing Pipeline and Ward Census, we found that while population size does not significantly influence where ARH units are allocated, population density and the proportion of low-income residents play a more substantial role. Additionally, the analysis revealed that main city centers, with higher population densities, tend to be prioritized in ARH unit allocation, reflecting the city's efforts to address housing pressures in densely populated urban areas.
 
-## Second discussion point
+The data also highlighted that, while a large number of units have been approved across multiple wards, a significant portion remains in the pre-construction or review phases. Wards such as Ward 10, 11, 13, and 25 show more advanced progress, with a greater proportion of units either under construction or already occupied. These findings suggest that certain wards may have factors—such as expedited planning processes or greater political support—allowing them to advance ARH projects more rapidly.
 
-## Third discussion point
+## Weaknesses and Limitations
 
-## Weaknesses and next steps
+While this study provides important insights into the allocation and development of Affordable Rental Housing (ARH) units in Toronto, it is essential to acknowledge several weaknesses and limitations of the data used. The Affordable Housing Pipeline dataset focuses primarily on ARH units that have been approved, are under review, or are in construction. However, it does not provide a comprehensive view of the actual demand for affordable housing. Key indicators such as waiting lists, overcrowding, or more granular neighborhood-level housing needs are absent. This limits the scope of understanding the true demand for ARH units and the urgency of housing shortages in certain areas. While the Ward Profiles dataset provides data on population, unemployment rates, and low-income populations, it omits other important socioeconomic factors that may influence housing policy, such as education levels, health outcomes, and crime rates. These additional factors could provide a more holistic understanding of which wards face the most severe housing challenges and require more urgent attention for ARH development.
 
-Weaknesses and next steps should also be included.
+## Next Steps
 
-\newpage
+Building on the findings of this study, several steps can be taken to deepen the understanding of the factors influencing Affordable Rental Housing (ARH) development in Toronto and to improve the effectiveness of housing policies. First, it would be valuable to investigate the specific barriers slowing down ARH projects in certain wards. These barriers may include delays in planning approvals, challenges in securing funding, or resistance from local communities. Understanding these issues could help streamline the approval and construction process, ensuring that approved ARH units are developed in a timely manner.
 
-\appendix
+Another important next step is to conduct a detailed policy analysis to uncover why certain wards, particularly Wards 10, 11, 13, and 25, are progressing more quickly in ARH development. This may involve examining city council decisions, political support, and the availability of financial incentives. Understanding the factors behind these accelerated developments could provide insights for replicating success in other wards that are lagging behind in ARH construction.
 
-
+Additionally, it would be beneficial to investigate the equity of ARH distribution across the city. While this study has highlighted population density and low-income percentages as key factors influencing ARH allocation, other factors, such as proximity to public transportation, existing infrastructure, and access to services, may also play a role. A more comprehensive analysis could help ensure that affordable housing is distributed more equitably across Toronto’s diverse neighborhoods.
 
 \newpage
 
